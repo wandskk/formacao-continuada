@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   ArrowRight
 } from "lucide-react";
+import { CursistaCertificateButton } from "@/components/certificate/cursista-certificate-button";
 
 export default async function CursistaDashboardPage() {
   const user = await getCurrentUser();
@@ -96,6 +97,13 @@ export default async function CursistaDashboardPage() {
               const { course, certificate } = enrollment;
               const totalSessions = course.sessions.length;
 
+              const courseAtts = attendances.filter((a) => a.session.courseId === course.id);
+              const completedHours = courseAtts.reduce((acc, a) => acc + a.session.hours, 0);
+              const freqPct = course.totalHours > 0 ? Math.min(100, Math.round((completedHours / course.totalHours) * 100)) : 0;
+              const isApproved = freqPct >= course.minFrequency;
+              const minRequiredHours = Math.ceil((course.totalHours * course.minFrequency) / 100);
+              const remainingHours = Math.max(0, minRequiredHours - completedHours);
+
               return (
                 <div key={enrollment.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
@@ -114,56 +122,45 @@ export default async function CursistaDashboardPage() {
                   </div>
 
                   {/* Barra de Progresso de Frequência */}
-                  {(() => {
-                    const courseAtts = attendances.filter((a) => a.session.courseId === course.id);
-                    const completedHours = courseAtts.reduce((acc, a) => acc + a.session.hours, 0);
-                    const freqPct = course.totalHours > 0 ? Math.min(100, Math.round((completedHours / course.totalHours) * 100)) : 0;
-                    const isApproved = freqPct >= course.minFrequency;
-                    const minRequiredHours = Math.ceil((course.totalHours * course.minFrequency) / 100);
-                    const remainingHours = Math.max(0, minRequiredHours - completedHours);
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Progresso da Formação: <strong>{completedHours}h de {course.totalHours}h</strong></span>
+                      </span>
+                      <span className={`font-bold ${isApproved ? "text-emerald-600" : "text-slate-600"}`}>
+                        {freqPct}% ({courseAtts.length} presença{courseAtts.length === 1 ? "" : "s"})
+                      </span>
+                    </div>
 
-                    return (
-                      <div className="space-y-2 pt-2 border-t border-slate-100">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-slate-700 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Progresso da Formação: <strong>{completedHours}h de {course.totalHours}h</strong></span>
-                          </span>
-                          <span className={`font-bold ${isApproved ? "text-emerald-600" : "text-slate-600"}`}>
-                            {freqPct}% ({courseAtts.length} presença{courseAtts.length === 1 ? "" : "s"})
-                          </span>
-                        </div>
+                    <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isApproved ? "bg-emerald-500" : "bg-brand-500"
+                        }`}
+                        style={{ width: `${Math.min(100, freqPct)}%` }}
+                      />
+                    </div>
 
-                        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              isApproved ? "bg-emerald-500" : "bg-brand-500"
-                            }`}
-                            style={{ width: `${Math.min(100, freqPct)}%` }}
-                          />
-                        </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                      {isApproved ? (
+                        <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          Frequência mínima de {course.minFrequency}% atingida!
+                        </span>
+                      ) : (
+                        <span>
+                          Meta do MEC: {course.minFrequency}% (faltam {remainingHours}h de presença)
+                        </span>
+                      )}
 
-                        <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
-                          {isApproved ? (
-                            <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              Frequência mínima de {course.minFrequency}% atingida!
-                            </span>
-                          ) : (
-                            <span>
-                              Meta do MEC: {course.minFrequency}% (faltam {remainingHours}h de presença)
-                            </span>
-                          )}
-
-                          {enrollment.homologatedAt && (
-                            <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded">
-                              Homologado pela Secretaria
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                      {enrollment.homologatedAt && (
+                        <span className="text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded">
+                          Homologado pela Secretaria
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
                   {/* Informações de Carga Horária e Certificação */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 text-xs">
@@ -180,23 +177,24 @@ export default async function CursistaDashboardPage() {
                       {certificate ? (
                         <span className="font-bold text-emerald-600 flex items-center gap-1">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          Disponível
+                          Emitido ({certificate.code})
                         </span>
+                      ) : enrollment.homologatedAt ? (
+                        <span className="font-bold text-purple-600">Pronto p/ emissão</span>
                       ) : (
                         <span className="text-slate-500">Ao homologar</span>
                       )}
                     </div>
                   </div>
 
-                  {/* Botão de Certificado se emitido */}
-                  {certificate && (
-                    <div className="pt-2">
-                      <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition">
-                        <Award className="w-4 h-4" />
-                        Baixar Certificado Autenticável
-                      </button>
-                    </div>
-                  )}
+                  {/* Botão de Certificado Interativo */}
+                  <CursistaCertificateButton
+                    enrollmentId={enrollment.id}
+                    certificateCode={certificate?.code}
+                    isHomologated={!!enrollment.homologatedAt}
+                    isApproved={freqPct >= course.minFrequency}
+                    minFrequency={course.minFrequency}
+                  />
                 </div>
               );
             })
