@@ -65,10 +65,13 @@ export default async function CursistaDashboardPage() {
             </div>
           </div>
 
-          <button className="w-full mt-2 flex items-center justify-center gap-2 bg-white text-brand-700 font-bold py-3.5 px-4 rounded-xl hover:bg-brand-50 transition shadow-sm text-sm">
+          <Link
+            href="/cursista/checkin"
+            className="w-full mt-2 flex items-center justify-center gap-2 bg-white text-brand-700 font-bold py-3.5 px-4 rounded-xl hover:bg-brand-50 transition shadow-sm text-sm"
+          >
             <Camera className="w-4 h-4" />
-            Abrir Câmera para Check-in
-          </button>
+            <span>Abrir Câmera para Check-in</span>
+          </Link>
         </div>
 
         {/* Suas Inscrições / Cursos */}

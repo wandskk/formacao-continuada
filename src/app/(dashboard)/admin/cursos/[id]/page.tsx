@@ -13,11 +13,14 @@ import {
   FileText, 
   Link as LinkIcon,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Tv,
+  PlusCircle
 } from "lucide-react";
 import { CopyCourseLinkButton } from "@/components/courses/copy-link-button";
 import { ImportSpreadsheetModal } from "@/components/courses/import-modal";
 import { EnrollmentTable } from "@/components/courses/enrollment-table";
+import { SessionFormModal } from "@/components/attendance/session-form-modal";
 import { CourseStatus } from "@prisma/client";
 
 interface CourseDetailPageProps {
@@ -43,6 +46,9 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
       },
       sessions: {
         orderBy: { date: "desc" },
+        include: {
+          _count: { select: { attendances: true } },
+        },
       },
     },
   });
@@ -177,6 +183,95 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
             </div>
           </div>
         )}
+
+        {/* Gestão de Sessões e Chamadas */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Encontros e Sessões de Chamada</h2>
+              <p className="text-xs text-slate-500">
+                Abertura de chamadas presenciais, projeção de QR Code rotativo e baixa manual
+              </p>
+            </div>
+
+            <SessionFormModal
+              courseId={course.id}
+              courseTitle={course.title}
+              triggerButton={
+                <button className="inline-flex items-center gap-2 bg-emerald-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-emerald-700 transition shadow-sm">
+                  <PlusCircle className="w-4 h-4" />
+                  <span>+ Abrir Nova Sessão de Chamada</span>
+                </button>
+              }
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {course.sessions.length === 0 ? (
+              <div className="p-10 text-center text-xs text-slate-500 space-y-2">
+                <Calendar className="w-8 h-8 text-slate-300 mx-auto" />
+                <p className="font-semibold text-slate-700">Nenhum encontro presencial criado ainda.</p>
+                <p className="text-[11px] text-slate-400">
+                  Clique em "+ Abrir Nova Sessão de Chamada" para agendar o encontro e projetar o QR Code.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {course.sessions.map((sess) => (
+                  <div key={sess.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-50 transition">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-sm">{sess.title || "Encontro Presencial"}</span>
+                        {sess.isActive ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            Ativa
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+                            Encerrada
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          {new Date(sess.date).toLocaleDateString("pt-BR")}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          {sess.hours}h creditadas
+                        </span>
+                        <span className="flex items-center gap-1 font-semibold text-brand-700 bg-blue-50 px-2 py-0.5 rounded-full">
+                          <Users className="w-3 h-3" />
+                          {sess._count.attendances} presenças registradas
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+                      <Link
+                        href={`/projetor/${sess.id}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-slate-800 transition shadow-xs"
+                      >
+                        <Tv className="w-3.5 h-3.5 text-brand-400" />
+                        <span>Projetor</span>
+                      </Link>
+
+                      <Link
+                        href={`/instrutor/sessao/${sess.id}`}
+                        className="inline-flex items-center gap-1 bg-white text-slate-700 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 transition shadow-xs"
+                      >
+                        <span>Gerenciar Presenças</span>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Gestão de Cursistas Matriculados */}
         <div className="space-y-4">

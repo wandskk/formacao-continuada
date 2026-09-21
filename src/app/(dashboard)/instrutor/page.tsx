@@ -8,9 +8,14 @@ import {
   BookOpen, 
   Users, 
   Clock, 
-  Calendar,
-  Sparkles
+  Calendar, 
+  Sparkles,
+  PlusCircle,
+  Tv,
+  ExternalLink
 } from "lucide-react";
+import Link from "next/link";
+import { SessionFormModal } from "@/components/attendance/session-form-modal";
 
 export default async function InstrutorDashboardPage() {
   const user = await getCurrentUser();
@@ -22,6 +27,10 @@ export default async function InstrutorDashboardPage() {
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { enrollments: true, sessions: true } },
+      sessions: {
+        orderBy: { date: "desc" },
+        take: 3,
+      },
     },
   });
 
@@ -91,33 +100,77 @@ export default async function InstrutorDashboardPage() {
                 Nenhuma turma cadastrada no momento.
               </div>
             ) : (
-              courses.map((course) => (
-                <div key={course.id} className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-50 transition">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-base">{course.title}</h3>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{course.targetAudience || course.description}</p>
-                    <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-600">
-                      <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-2.5 py-0.5 rounded-full">
-                        <Clock className="w-3 h-3 text-slate-500" />
-                        {course.totalHours}h
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-medium bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full">
-                        <Users className="w-3 h-3" />
-                        {course._count.enrollments} cursistas matriculados
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-2.5 py-0.5 rounded-full">
-                        <Calendar className="w-3 h-3" />
-                        {course._count.sessions} encontros realizados
-                      </span>
+              courses.map((course) => {
+                const latestSession = course.sessions[0];
+
+                return (
+                  <div key={course.id} className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:bg-slate-50 transition">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-slate-900 text-base">{course.title}</h3>
+                      <p className="text-xs text-slate-500 line-clamp-1">{course.targetAudience || course.description}</p>
+                      
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                        <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-2.5 py-0.5 rounded-full">
+                          <Clock className="w-3 h-3 text-slate-500" />
+                          {course.totalHours}h
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-medium bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full">
+                          <Users className="w-3 h-3" />
+                          {course._count.enrollments} cursistas matriculados
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-2.5 py-0.5 rounded-full">
+                          <Calendar className="w-3 h-3" />
+                          {course._count.sessions} encontros realizados
+                        </span>
+                      </div>
+
+                      {/* Encontros Recentes */}
+                      {course.sessions.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <span className="text-[11px] font-semibold text-slate-400">Sessões:</span>
+                          {course.sessions.map((sess) => (
+                            <Link
+                              key={sess.id}
+                              href={`/instrutor/sessao/${sess.id}`}
+                              className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition ${
+                                sess.isActive
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                  : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                              }`}
+                            >
+                              {new Date(sess.date).toLocaleDateString("pt-BR")} ({sess.hours}h)
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 self-start md:self-center">
+                      {latestSession && latestSession.isActive && (
+                        <Link
+                          href={`/projetor/${latestSession.id}`}
+                          target="_blank"
+                          className="inline-flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-slate-800 transition shadow-sm"
+                        >
+                          <Tv className="w-3.5 h-3.5 text-brand-400" />
+                          <span>Projetor ao Vivo</span>
+                        </Link>
+                      )}
+
+                      <SessionFormModal
+                        courseId={course.id}
+                        courseTitle={course.title}
+                        triggerButton={
+                          <button className="inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl hover:bg-emerald-700 transition shadow-sm">
+                            <PlusCircle className="w-3.5 h-3.5" />
+                            <span>Abrir Nova Sessão</span>
+                          </button>
+                        }
+                      />
                     </div>
                   </div>
-
-                  <button className="self-start sm:self-center inline-flex items-center gap-1.5 bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl hover:bg-emerald-700 transition shadow-sm">
-                    <QrCode className="w-3.5 h-3.5" />
-                    Projetar Chamada
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
