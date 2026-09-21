@@ -47,14 +47,20 @@ export default async function AdminDashboardPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button className="inline-flex items-center gap-2 bg-brand-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-brand-700 transition shadow-sm">
+            <Link
+              href="/admin/cursos/novo"
+              className="inline-flex items-center gap-2 bg-brand-600 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-brand-700 transition shadow-sm"
+            >
               <PlusCircle className="w-4 h-4" />
               Nova Formação
-            </button>
-            <button className="inline-flex items-center gap-2 bg-white text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 transition shadow-sm">
-              <Upload className="w-4 h-4 text-slate-500" />
-              Importar Planilha
-            </button>
+            </Link>
+            <Link
+              href="/admin/cursos"
+              className="inline-flex items-center gap-2 bg-white text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 transition shadow-sm"
+            >
+              <BookOpen className="w-4 h-4 text-brand-600" />
+              Ver Todas as Formações
+            </Link>
           </div>
         </div>
 
@@ -120,6 +126,12 @@ export default async function AdminDashboardPage() {
               <h2 className="font-bold text-slate-900 text-lg">Formações Continuadas Recentes</h2>
               <p className="text-xs text-slate-500">Cursos disponíveis para inscrição e controle de chamada</p>
             </div>
+            <Link
+              href="/admin/cursos"
+              className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
+            >
+              Ver Todas &rarr;
+            </Link>
           </div>
 
           <div className="divide-y divide-slate-100">
@@ -131,8 +143,12 @@ export default async function AdminDashboardPage() {
               recentCourses.map((course) => (
                 <div key={course.id} className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-50 transition">
                   <div>
-                    <h3 className="font-bold text-slate-900 text-base">{course.title}</h3>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{course.description}</p>
+                    <h3 className="font-bold text-slate-900 text-base">
+                      <Link href={`/admin/cursos/${course.id}`} className="hover:text-brand-600 transition">
+                        {course.title}
+                      </Link>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{course.description || course.targetAudience}</p>
                     <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-600">
                       <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-2.5 py-0.5 rounded-full">
                         <Clock className="w-3 h-3 text-slate-500" />
@@ -152,6 +168,12 @@ export default async function AdminDashboardPage() {
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {course.status}
                     </span>
+                    <Link
+                      href={`/admin/cursos/${course.id}`}
+                      className="text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition ml-2 shadow-xs"
+                    >
+                      Gerenciar
+                    </Link>
                   </div>
                 </div>
               ))
