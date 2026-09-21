@@ -9,8 +9,32 @@ async function main() {
   const adminHash = await bcrypt.hash("admin123", 10);
   const instructorHash = await bcrypt.hash("instrutor123", 10);
   const cursistaHash = await bcrypt.hash("12051988", 10);
+  const wandersonHash = await bcrypt.hash("11011997", 10);
 
-  // 1. Usuário Admin (Secretaria)
+  // 1. Usuário Admin Principal (Wanderson Kenedy)
+  await prisma.user.upsert({
+    where: { cpf: "12167857403" },
+    update: {
+      name: "Wanderson Kenedy Soares de Oliveira",
+      role: "ADMIN",
+      password: wandersonHash,
+      birthDate: new Date("1997-01-11T00:00:00.000Z"),
+      school: "Secretaria Municipal de Educação",
+      function: "Administrador do Sistema",
+    },
+    create: {
+      name: "Wanderson Kenedy Soares de Oliveira",
+      cpf: "12167857403",
+      email: "wanderson.oliveira@educacao.gov.br",
+      password: wandersonHash,
+      role: "ADMIN",
+      birthDate: new Date("1997-01-11T00:00:00.000Z"),
+      school: "Secretaria Municipal de Educação",
+      function: "Administrador do Sistema",
+    },
+  });
+
+  // 1.1. Usuário Admin de Demonstração
   const admin = await prisma.user.upsert({
     where: { cpf: "00000000001" },
     update: {},
@@ -90,9 +114,10 @@ async function main() {
 
   console.log("Seed concluído com sucesso!");
   console.log("Contas de teste criadas:");
-  console.log("- ADMIN:      CPF 000.000.000-01 / Senha admin123");
-  console.log("- INSTRUTOR:  CPF 000.000.000-02 / Senha instrutor123");
-  console.log("- CURSISTA:   CPF 000.000.000-03 / Senha 12051988 (Data de Nasc: 12/05/1988)");
+  console.log("- ADMIN (Wanderson): CPF 121.678.574-03 / Senha 11011997");
+  console.log("- ADMIN (Demo):      CPF 000.000.000-01 / Senha admin123");
+  console.log("- INSTRUTOR:         CPF 000.000.000-02 / Senha instrutor123");
+  console.log("- CURSISTA:          CPF 000.000.000-03 / Senha 12051988 (Data de Nasc: 12/05/1988)");
 }
 
 main()

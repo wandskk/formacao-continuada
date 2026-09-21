@@ -193,10 +193,19 @@ export default function LoginPage() {
               <div className="mt-3 space-y-2 text-xs">
                 <button
                   type="button"
+                  onClick={() => handleFillDemo("121.678.574-03", "11011997")}
+                  className="w-full text-left p-2 rounded-lg bg-brand-50/80 hover:bg-brand-100 border border-brand-200 transition"
+                >
+                  <span className="font-bold text-brand-900 block">ADMIN • Wanderson Kenedy</span>
+                  <span className="text-brand-700">CPF: 121.678.574-03 | Senha: 11011997</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => handleFillDemo("000.000.000-01", "admin123")}
                   className="w-full text-left p-2 rounded-lg bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-200 transition"
                 >
-                  <span className="font-bold text-slate-800 block">ADMIN (Secretaria)</span>
+                  <span className="font-bold text-slate-800 block">ADMIN (Demo Secretaria)</span>
                   <span className="text-slate-500">CPF: 000.000.000-01 | Senha: admin123</span>
                 </button>
 
