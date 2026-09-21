@@ -37,11 +37,22 @@ export function QrProjector({
 }: QrProjectorProps) {
   const [token, setToken] = useState(initialToken);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const ROTATION_SECONDS = 300; // 5 minutos (300 segundos) para permitir login tranquilo
   const [attendeesCount, setAttendeesCount] = useState(initialAttendeesCount);
   const [recentAttendees, setRecentAttendees] = useState<{ name: string; school?: string | null }[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(ROTATION_SECONDS);
   const [isActive, setIsActive] = useState(true);
+
+  // Formata o tempo restante de forma amigável (ex: 4m 32s ou 45s)
+  const formatTimeLeft = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) {
+      return `${m}m ${s.toString().padStart(2, "0")}s`;
+    }
+    return `${s}s`;
+  };
 
   // Gera o QR Code com a URL absoluta para check-in
   useEffect(() => {
@@ -62,7 +73,7 @@ export function QrProjector({
       .catch((err) => console.error("Erro ao gerar QR Code:", err));
   }, [token, sessionId]);
 
-  // Loop de contagem regressiva de 20 segundos
+  // Loop de contagem regressiva de 5 minutos (300 segundos)
   useEffect(() => {
     if (!isActive) return;
 
@@ -70,7 +81,7 @@ export function QrProjector({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           fetchNewToken();
-          return 20;
+          return ROTATION_SECONDS;
         }
         return prev - 1;
       });
@@ -92,6 +103,11 @@ export function QrProjector({
         setAttendeesCount(data.attendeesCount);
         if (data.recentAttendees) {
           setRecentAttendees(data.recentAttendees);
+        }
+        if (typeof data.remainingSeconds === "number") {
+          setTimeLeft(data.remainingSeconds);
+        } else {
+          setTimeLeft(ROTATION_SECONDS);
         }
       }
     } catch (err) {
@@ -175,19 +191,30 @@ export function QrProjector({
             </div>
           </div>
 
-          {/* Barra de Progresso da Rotação (20s) */}
+          {/* Barra de Progresso da Rotação (5min / 300s) */}
           <div className="w-full mt-4 space-y-1.5">
             <div className="flex items-center justify-between text-xs text-slate-400 px-1 font-semibold">
-              <span className="flex items-center gap-1 text-slate-300">
+              <span className="flex items-center gap-1.5 text-slate-300">
                 <Clock className="w-3.5 h-3.5 text-brand-400" />
                 Atualização em
               </span>
-              <span className="font-mono text-brand-400 font-bold">{timeLeft}s</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-brand-400 font-bold tracking-wide">
+                  {formatTimeLeft(timeLeft)}
+                </span>
+                <button
+                  onClick={fetchNewToken}
+                  className="text-slate-400 hover:text-brand-300 transition p-0.5 rounded hover:bg-slate-800"
+                  title="Renovar QR Code manualmente agora"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
             <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-brand-500 to-emerald-400 transition-all duration-1000 ease-linear rounded-full"
-                style={{ width: `${(timeLeft / 20) * 100}%` }}
+                style={{ width: `${(timeLeft / ROTATION_SECONDS) * 100}%` }}
               />
             </div>
           </div>

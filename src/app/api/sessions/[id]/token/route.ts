@@ -47,10 +47,10 @@ export async function GET(request: Request, { params }: RouteParams) {
     let currentToken = session.qrToken;
     let nextExpiresAt = session.qrExpiresAt;
 
-    // Se o token expira nos próximos 3 segundos ou já expirou, renova no banco
+    // Se o token expira nos próximos 3 segundos ou já expirou, renova no banco para 5 minutos (300s)
     if (now >= expiresAt - 3000) {
       currentToken = crypto.randomUUID();
-      nextExpiresAt = new Date(now + 25000); // 25s de vida
+      nextExpiresAt = new Date(now + 300000); // 5 minutos (300 segundos)
 
       await prisma.session.update({
         where: { id: session.id },
@@ -61,10 +61,15 @@ export async function GET(request: Request, { params }: RouteParams) {
       });
     }
 
+    const remainingSeconds = nextExpiresAt
+      ? Math.max(1, Math.round((new Date(nextExpiresAt).getTime() - now) / 1000))
+      : 300;
+
     return NextResponse.json({
       isActive: true,
       qrToken: currentToken,
       expiresAt: nextExpiresAt,
+      remainingSeconds,
       attendeesCount: session._count.attendances,
       recentAttendees: session.attendances.map((a) => ({
         name: a.user.name.split(" ")[0] + " " + (a.user.name.split(" ")[1] || ""),

@@ -58,7 +58,7 @@ Para garantir qualidade, entregas parciais testáveis e redução de risco, divi
 | **DEC-001** | 2026-09-21 | Adoção do método Faseado com Brainstorming estruturado antes de qualquer código | Implementação direta do código | Garantir que regras de negócio do MEC e infraestrutura atendam perfeitamente aos requisitos. |
 | **DEC-002** | 2026-09-21 | Utilização do PostgreSQL gerenciado via Neon (Vercel) com credenciais no `.env` | Docker local / PostgreSQL local | Facilidade de integração com deploy na Vercel e persistência em nuvem pronta para produção. |
 | **DEC-003** | 2026-09-21 | Cursistas acessam com CPF e Senha Inicial baseada na Data de Nascimento | Senhas aleatórias / Acesso sem senha | Reduz atrito em sala de aula, viabiliza importação em lote e mantém rastreabilidade por sessão. |
-| **DEC-004** | 2026-09-21 | QR Code Dinâmico com token rotativo a cada 20-30s na tela do instrutor | QR Code estático / Geofencing GPS | Evita fraudes por compartilhamento de fotos em grupos de mensagens sem exigir GPS invasivo. |
+| **DEC-004** | 2026-09-21 | QR Code Dinâmico com token rotativo a cada 5 minutos (300s) na tela do instrutor | QR Code estático / Rotação ultra-curta | Evita fraudes por compartilhamento remoto e garante tempo hábil para login e check-in dos cursistas. |
 | **DEC-005** | 2026-09-21 | Emissão de certificados mediante Homologação da Turma pelo Admin/Secretaria | Liberação 100% automática imediata | Permite revisão de atestados e baixas manuais antes da emissão definitiva dos certificados oficiais. |
 | **DEC-006** | 2026-09-21 | Mapeamento explícito de Skills no projeto e governança estrita de commits/push | Desenvolvimento ad-hoc sem catálogo | Garante que cada módulo siga padrões de especialistas com rastreabilidade no Git. |
 
@@ -69,7 +69,7 @@ Para garantir qualidade, entregas parciais testáveis e redução de risco, divi
 ### Definições Consolidadas:
 1. **Banco de Dados & Infra:** PostgreSQL gerenciado no Neon (Vercel) com string de conexão no `.env`.
 2. **Credenciais dos Cursistas:** Acesso via CPF com senha inicial padrão sendo a Data de Nascimento (facilita importação via CSV/XLSX e auto-inscrição).
-3. **Presença Anti-Fraude:** QR Code dinâmico/rotativo (intervalo de 20-30s) na tela projetada pelo instrutor + contingência de baixa manual.
+3. **Presença Anti-Fraude:** QR Code dinâmico/rotativo (intervalo de 5 minutos / 300s) na tela projetada pelo instrutor + contingência de baixa manual.
 4. **Homologação dos Certificados:** A secretaria/admin revisa pendências e homologa a turma para liberação dos certificados em PDF com QR Code público de validação.
 5. **Não-Escopo Explícito:** O sistema não é um LMS de aulas em vídeo/tarefas (como Moodle), mas sim uma ferramenta focada em gestão de presença, conformidade MEC e certificação.
 

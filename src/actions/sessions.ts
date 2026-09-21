@@ -56,7 +56,7 @@ export async function createSessionAction(
         hours,
         instructorId: instructorId || currentUser.id,
         qrToken: crypto.randomUUID(),
-        qrExpiresAt: new Date(Date.now() + 30000), // 30s inicial
+        qrExpiresAt: new Date(Date.now() + 300000), // 5 minutos inicial
         isActive: true,
       },
     });
@@ -117,7 +117,7 @@ export async function rotateSessionQrTokenAction(sessionId: string): Promise<Act
     }
 
     const newToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 25000); // 25s de validade
+    const expiresAt = new Date(Date.now() + 300000); // 5 minutos de validade
 
     await prisma.session.update({
       where: { id: sessionId },
@@ -172,11 +172,11 @@ export async function checkInAction({
       return { error: "Esta chamada foi encerrada pelo formador." };
     }
 
-    // Validação do Token dinâmico com tolerância de 15 segundos para latência 3G/4G
+    // Validação do Token dinâmico com tolerância de 60 segundos para latência 3G/4G e conclusão de login
     const now = Date.now();
     const expiryTime = session.qrExpiresAt ? new Date(session.qrExpiresAt).getTime() : 0;
     const isTokenMatch = session.qrToken === qrToken;
-    const isWithinGraceWindow = now <= expiryTime + 15000;
+    const isWithinGraceWindow = now <= expiryTime + 60000;
 
     if (!isTokenMatch || !isWithinGraceWindow) {
       return {
