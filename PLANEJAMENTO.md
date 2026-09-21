@@ -26,8 +26,8 @@ Para garantir qualidade, entregas parciais testáveis e redução de risco, divi
 | **Fase 2** | **Autenticação & Controle de Acesso (RBAC)** | Login Admin, Instrutor e Cursista (via CPF/Senha) | **Concluído** |
 | **Fase 3** | **Módulo 1: Cursos, Turmas e Inscrições** | CRUD de formações, slug para auto-inscrição e importação em lote | **Concluído** |
 | **Fase 4** | **Módulo 2: Presença Dinâmica & QR Code** | Sessões de aula, QR Code em tempo real, check-in e baixa manual | **Concluído** |
-| **Fase 5** | **Módulo 3: Motor de Frequência & Relatórios MEC** | Cálculo de % de presença, regras de corte e exportação em PDF | **Próxima Etapa** |
-| **Fase 6** | **Módulo 4: Certificação & Validação Pública** | Hash único, geração de PDF e página pública `/validar/[codigo]` | Pendente |
+| **Fase 5** | **Módulo 3: Motor de Frequência & Relatórios MEC** | Cálculo de % de presença, regras de corte e exportação em PDF | **Concluído** |
+| **Fase 6** | **Módulo 4: Certificação & Validação Pública** | Hash único, geração de PDF e página pública `/validar/[codigo]` | **Próxima Etapa** |
 
 ---
 

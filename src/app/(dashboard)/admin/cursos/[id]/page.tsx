@@ -97,11 +97,27 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
             <CopyCourseLinkButton slug={course.slug} />
 
             <Link
+              href={`/admin/cursos/${course.id}/frequencia`}
+              className="inline-flex items-center gap-1.5 bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition shadow-xs"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Frequência & Homologação</span>
+            </Link>
+
+            <Link
+              href={`/admin/cursos/${course.id}/relatorio-mec`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold px-3.5 py-2.5 rounded-xl transition shadow-xs"
+            >
+              <span>Relatório MEC (PDF)</span>
+            </Link>
+
+            <Link
               href={`/admin/cursos/${course.id}/editar`}
               className="inline-flex items-center gap-1.5 bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl transition shadow-xs"
             >
               <Edit className="w-3.5 h-3.5 text-slate-500" />
-              <span>Editar Informações</span>
+              <span>Editar</span>
             </Link>
 
             <ImportSpreadsheetModal
