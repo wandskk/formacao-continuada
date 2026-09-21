@@ -1,0 +1,161 @@
+// Prisma Schema - Sistema de Gestão de Formações e Certificação
+// Selo Nacional Compromisso com a Alfabetização - MEC (Itens 22 e 35)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum Role {
+  ADMIN
+  INSTRUTOR
+  CURSISTA
+}
+
+enum CourseStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  IN_PROGRESS
+  APPROVED
+  REPROVED_ABSENCE
+  DROPPED
+}
+
+enum CheckInType {
+  QR_CODE
+  MANUAL
+}
+
+model User {
+  id              String       @id @default(uuid())
+  name            String
+  cpf             String       @unique // 11 dígitos normalizados
+  email           String?      @unique
+  password        String       // Hash (bcrypt)
+  role            Role         @default(CURSISTA)
+  birthDate       DateTime?    // Base para senha padrão inicial (DEC-003)
+  school          String?      // Escola de lotação
+  function        String?      // Cargo / Função (ex: Professor 1º Ano)
+  phone           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  enrollments     Enrollment[]
+  attendances     Attendance[]
+  taughtSessions  Session[]    @relation("InstructorSessions")
+
+  @@index([cpf])
+  @@index([role])
+  @@map("users")
+}
+
+model Course {
+  id              String       @id @default(uuid())
+  title           String
+  slug            String       @unique // Rota amigável: /inscricao/[slug]
+  description     String?      @db.Text
+  targetAudience  String?      // Público-alvo da formação
+  syllabus        String?      @db.Text // Ementa para o verso do certificado (Item 35)
+  totalHours      Int          // Carga horária total (ex: 40h)
+  minFrequency    Float        @default(75.0) // % mínima de presença para aprovação
+  status          CourseStatus @default(OPEN)
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  enrollments     Enrollment[]
+  sessions        Session[]
+
+  @@index([slug])
+  @@index([status])
+  @@map("courses")
+}
+
+model Enrollment {
+  id              String           @id @default(uuid())
+  userId          String
+  courseId        String
+  status          EnrollmentStatus @default(IN_PROGRESS)
+  homologatedAt   DateTime?        // Data da homologação da secretaria
+  homologatedBy   String?          // Identificador do admin homologador
+  enrolledAt      DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  certificate     Certificate?
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@map("enrollments")
+}
+
+model Session {
+  id              String       @id @default(uuid())
+  courseId        String
+  instructorId    String?
+  title           String?      // Tema do encontro / módulo
+  date            DateTime     // Data do encontro
+  hours           Int          // Carga horária do encontro (ex: 4h)
+  qrToken         String       @unique @default(uuid()) // Token dinâmico rotativo
+  qrExpiresAt     DateTime?    // Expiração do token (a cada 20-30s)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  course          Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor      User?        @relation("InstructorSessions", fields: [instructorId], references: [id], onDelete: SetNull)
+  attendances     Attendance[]
+
+  @@index([courseId])
+  @@index([qrToken])
+  @@map("sessions")
+}
+
+model Attendance {
+  id                  String       @id @default(uuid())
+  sessionId           String
+  userId              String
+  checkInAt           DateTime     @default(now())
+  method              CheckInType  @default(QR_CODE)
+  manualRegisteredBy  String?      // Se MANUAL, id do instrutor/admin que deu a baixa
+  justification       String?      // Justificativa em caso de contingência
+  createdAt           DateTime     @default(now())
+
+  session             Session      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@index([userId])
+  @@map("attendances")
+}
+
+model Certificate {
+  id                String       @id @default(uuid())
+  enrollmentId      String       @unique
+  code              String       @unique // Código alfanumérico amigável (ex: CERT-2026-X8F9A)
+  verificationHash  String       @unique // Hash SHA-256 de autenticidade matemática
+  issuedAt          DateTime     @default(now())
+  pdfUrl            String?      // URL de storage (opcional)
+
+  enrollment        Enrollment   @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([verificationHash])
+  @@map("certificates")
+}
