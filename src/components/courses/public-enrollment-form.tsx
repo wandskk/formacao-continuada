@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
 import { publicEnrollAction, authenticatedEnrollAction } from "@/actions/courses";
-import { formatCPF, sanitizeNumeric } from "@/lib/utils";
+import { formatCPF, sanitizeNumeric, formatDateInput } from "@/lib/utils";
 import { 
   CheckCircle2, 
   UserPlus, 
@@ -80,6 +80,7 @@ export function PublicEnrollmentForm({
   const [selectedSchool, setSelectedSchool] = useState(schoolList[0] || "");
   const [customSchool, setCustomSchool] = useState("");
   const [selectedTrack, setSelectedTrack] = useState(trackList[0] || "");
+  const [birthDate, setBirthDate] = useState("");
 
   // Estado para cursista já autenticado
   const [authTrack, setAuthTrack] = useState(trackList[0] || "");
@@ -91,6 +92,10 @@ export function PublicEnrollmentForm({
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = sanitizeNumeric(e.target.value).slice(0, 11);
     setCpf(formatCPF(raw));
+  };
+
+  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBirthDate(formatDateInput(e.target.value));
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,11 +355,16 @@ export function PublicEnrollmentForm({
                 Data de Nascimento *
               </label>
               <input
-                type="date"
+                type="text"
+                inputMode="numeric"
                 id="birthDate"
                 name="birthDate"
                 required
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                value={birthDate}
+                onChange={handleBirthDateChange}
+                placeholder="DD/MM/AAAA"
+                maxLength={10}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono"
               />
             </div>
           </div>

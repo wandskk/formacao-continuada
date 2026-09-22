@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { generateUniqueCourseSlug, slugify } from "@/lib/slug";
-import { sanitizeNumeric } from "@/lib/utils";
+import { sanitizeNumeric, parseBrazilianDate } from "@/lib/utils";
 import { formatBirthDatePassword, hashPassword } from "@/lib/auth/password";
 import { setSessionCookie } from "@/lib/auth/session";
 import { parseCursistasSpreadsheet } from "@/lib/spreadsheet";
@@ -304,7 +304,10 @@ const publicEnrollSchema = z.object({
     .min(11, "CPF inválido")
     .transform((val) => sanitizeNumeric(val))
     .refine((val) => val.length === 11, "O CPF deve conter 11 dígitos"),
-  birthDate: z.string().min(8, "Data de nascimento é obrigatória"),
+  birthDate: z
+    .string()
+    .min(8, "Data de nascimento é obrigatória")
+    .refine((val) => parseBrazilianDate(val) !== null, "Data de nascimento inválida. Digite no formato DD/MM/AAAA (ex: 15/04/1985)"),
   school: z.string().optional(),
   function: z.string().optional(),
   track: z.string().optional(),
@@ -354,7 +357,7 @@ export async function publicEnrollAction(
   }
 
   const { name, cpf, birthDate: birthStr, school, function: userFunction, track, email, phone } = validation.data;
-  const parsedBirth = new Date(birthStr);
+  const parsedBirth = parseBrazilianDate(birthStr)!;
 
   try {
     let user = await prisma.user.findUnique({

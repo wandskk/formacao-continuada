@@ -55,10 +55,10 @@ export async function loginAction(
     // Suporte à Decisão DEC-003: Validação da senha inicial baseada na data de nascimento
     if (!isPasswordValid && user.birthDate) {
       const birthPassword = formatBirthDatePassword(user.birthDate);
-      if (password === birthPassword) {
+      if (password === birthPassword || sanitizeNumeric(password) === birthPassword) {
         isPasswordValid = true;
-        // Atualiza a senha para o hash bcrypt
-        const newHash = await hashPassword(password);
+        // Atualiza a senha para o hash bcrypt (salva sem barras para padronização)
+        const newHash = await hashPassword(birthPassword);
         await prisma.user.update({
           where: { id: user.id },
           data: { password: newHash },
