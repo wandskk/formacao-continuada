@@ -266,17 +266,20 @@ export function PublicEnrollmentForm({
 
   // Cursista deslogado: Formulário completo de auto-inscrição
   const actionFn = async (prevState: any, formData: FormData) => {
+    // Garante que os campos controlados com máscara são propagados corretamente no FormData
+    if (cpf) formData.set("cpf", cpf);
+    if (birthDate) formData.set("birthDate", birthDate);
+    if (phone) formData.set("phone", phone);
+
     // Resolve escola final
     const finalSchool = selectedSchool === "OUTRA" ? customSchool : selectedSchool;
-    formData.set("school", finalSchool);
+    formData.set("school", finalSchool || "");
 
     // Resolve cargo final
     const finalRole = selectedRole === "OUTRO" ? customRole : selectedRole;
-    formData.set("function", finalRole);
+    formData.set("function", finalRole || "");
 
-    if (selectedTrack) {
-      formData.set("track", selectedTrack);
-    }
+    formData.set("track", selectedTrack || "");
 
     const res = await publicEnrollAction(courseSlug, prevState, formData);
     if (res.success) {

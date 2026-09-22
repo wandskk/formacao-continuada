@@ -308,11 +308,11 @@ const publicEnrollSchema = z.object({
     .string()
     .min(8, "Data de nascimento é obrigatória")
     .refine((val) => parseBrazilianDate(val) !== null, "Data de nascimento inválida. Digite no formato DD/MM/AAAA (ex: 15/04/1985)"),
-  school: z.string().optional(),
-  function: z.string().optional(),
-  track: z.string().optional(),
-  email: z.string().email("E-mail inválido").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  school: z.string().trim().nullish(),
+  function: z.string().trim().nullish(),
+  track: z.string().trim().nullish(),
+  email: z.string().trim().email("E-mail inválido").nullish().or(z.literal("")),
+  phone: z.string().trim().nullish(),
 });
 
 /**
@@ -341,14 +341,14 @@ export async function publicEnrollAction(
   }
 
   const rawData = {
-    name: formData.get("name") as string,
-    cpf: formData.get("cpf") as string,
-    birthDate: formData.get("birthDate") as string,
-    school: formData.get("school") as string,
-    function: formData.get("function") as string,
-    track: formData.get("track") as string,
-    email: formData.get("email") as string,
-    phone: rawPhone,
+    name: (formData.get("name") as string)?.trim() || "",
+    cpf: (formData.get("cpf") as string)?.trim() || "",
+    birthDate: (formData.get("birthDate") as string)?.trim() || "",
+    school: (formData.get("school") as string)?.trim() || undefined,
+    function: (formData.get("function") as string)?.trim() || undefined,
+    track: (formData.get("track") as string)?.trim() || undefined,
+    email: (formData.get("email") as string)?.trim() || undefined,
+    phone: rawPhone ? rawPhone.trim() : undefined,
   };
 
   const validation = publicEnrollSchema.safeParse(rawData);
