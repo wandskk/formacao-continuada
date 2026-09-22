@@ -72,6 +72,14 @@ model Course {
   status          CourseStatus @default(OPEN)
   startDate       DateTime?
   endDate         DateTime?
+  organizer       String?      // Ex: "Secretaria Municipal de Educação de Baraúna/RN"
+  partner         String?      // Ex: "SEEC/RN – Pró-Alfa RN"
+  enrollmentNotice String?     @db.Text // Texto de apresentação e regras oficiais do formulário de inscrição
+  roleOptions     String?      @db.Text // Lista de cargos aceitos (separados por linha ou vírgula)
+  schoolOptions   String?      @db.Text // Lista de escolas da rede (separadas por linha)
+  trackOptions    String?      @db.Text // Trilhas formativas (ex: "Professores de 1º e 2º, Professores de 3º e 5º")
+  requirePhone    Boolean      @default(true) // Telefone/WhatsApp obrigatório
+
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -88,6 +96,9 @@ model Enrollment {
   userId          String
   courseId        String
   status          EnrollmentStatus @default(IN_PROGRESS)
+  school          String?          // Escola informada no momento desta inscrição
+  function        String?          // Cargo informado no momento desta inscrição
+  track           String?          // Trilha formativa escolhida (ex: 1º e 2º Ano)
   homologatedAt   DateTime?        // Data da homologação da secretaria
   homologatedBy   String?          // Identificador do admin homologador
   enrolledAt      DateTime         @default(now())

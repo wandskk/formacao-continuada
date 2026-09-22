@@ -20,6 +20,9 @@ interface EnrollmentItem {
   id: string;
   enrolledAt: Date;
   status: string;
+  school?: string | null;
+  function?: string | null;
+  track?: string | null;
   user: {
     id: string;
     name: string;
@@ -44,13 +47,19 @@ export function EnrollmentTable({ courseId, enrollments }: EnrollmentTableProps)
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  const hasAnyTrack = enrollments.some((e) => !!e.track);
+
   const filtered = enrollments.filter((e) => {
     const term = search.toLowerCase();
+    const effectiveSchool = (e.school || e.user.school || "").toLowerCase();
+    const effectiveFunction = (e.function || e.user.function || "").toLowerCase();
+    const effectiveTrack = (e.track || "").toLowerCase();
     const nameMatch = e.user.name.toLowerCase().includes(term);
     const cpfMatch = e.user.cpf.includes(term);
-    const schoolMatch = (e.user.school || "").toLowerCase().includes(term);
-    const functionMatch = (e.user.function || "").toLowerCase().includes(term);
-    return nameMatch || cpfMatch || schoolMatch || functionMatch;
+    const schoolMatch = effectiveSchool.includes(term);
+    const functionMatch = effectiveFunction.includes(term);
+    const trackMatch = effectiveTrack.includes(term);
+    return nameMatch || cpfMatch || schoolMatch || functionMatch || trackMatch;
   });
 
   const handleRemove = async (enrollmentId: string, userName: string) => {
@@ -89,7 +98,7 @@ export function EnrollmentTable({ courseId, enrollments }: EnrollmentTableProps)
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filtrar por nome, CPF ou escola..."
+            placeholder="Filtrar por nome, CPF, escola, cargo ou trilha..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
@@ -120,6 +129,7 @@ export function EnrollmentTable({ courseId, enrollments }: EnrollmentTableProps)
                   <th className="py-3.5 px-4">Cursista (Professor)</th>
                   <th className="py-3.5 px-4">Escola / Lotação</th>
                   <th className="py-3.5 px-4">Cargo / Função</th>
+                  {hasAnyTrack && <th className="py-3.5 px-4">Trilha Formativa</th>}
                   <th className="py-3.5 px-4">Data Inscrição</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-right">Ações</th>
@@ -128,6 +138,9 @@ export function EnrollmentTable({ courseId, enrollments }: EnrollmentTableProps)
               <tbody className="divide-y divide-slate-100">
                 {filtered.map((enrollment) => {
                   const { user } = enrollment;
+                  const displaySchool = enrollment.school || user.school;
+                  const displayFunction = enrollment.function || user.function;
+
                   return (
                     <tr key={enrollment.id} className="hover:bg-slate-50/50 transition">
                       <td className="py-3.5 px-4">
@@ -139,10 +152,10 @@ export function EnrollmentTable({ courseId, enrollments }: EnrollmentTableProps)
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-700">
-                        {user.school ? (
+                        {displaySchool ? (
                           <div className="flex items-center gap-1.5">
                             <School className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                            <span className="line-clamp-1">{user.school}</span>
+                            <span className="line-clamp-1">{displaySchool}</span>
                           </div>
                         ) : (
                           <span className="text-slate-400 italic">Não informada</span>
@@ -150,15 +163,27 @@ export function EnrollmentTable({ courseId, enrollments }: EnrollmentTableProps)
                       </td>
 
                       <td className="py-3.5 px-4 text-slate-700">
-                        {user.function ? (
+                        {displayFunction ? (
                           <div className="flex items-center gap-1.5">
                             <Briefcase className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                            <span className="line-clamp-1">{user.function}</span>
+                            <span className="line-clamp-1">{displayFunction}</span>
                           </div>
                         ) : (
                           <span className="text-slate-400 italic">Professor</span>
                         )}
                       </td>
+
+                      {hasAnyTrack && (
+                        <td className="py-3.5 px-4 text-slate-700 whitespace-nowrap">
+                          {enrollment.track ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              {enrollment.track}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic">Geral</span>
+                          )}
+                        </td>
+                      )}
 
                       <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap">
                         {new Date(enrollment.enrolledAt).toLocaleDateString("pt-BR")}

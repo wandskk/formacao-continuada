@@ -15,10 +15,20 @@ import {
   ArrowLeft,
   AlertCircle,
   Sparkles,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Building2,
+  GraduationCap,
+  School,
+  PhoneCall
 } from "lucide-react";
 import Link from "next/link";
 import { slugify } from "@/lib/slug";
+import { 
+  BARAUNA_MUNICIPAL_SCHOOLS, 
+  DEFAULT_PRO_ALFA_ROLES, 
+  DEFAULT_PRO_ALFA_TRACKS, 
+  DEFAULT_PRO_ALFA_NOTICE 
+} from "@/lib/constants/schools";
 
 interface CourseFormProps {
   initialData?: {
@@ -33,6 +43,13 @@ interface CourseFormProps {
     status: CourseStatus;
     startDate?: Date | null;
     endDate?: Date | null;
+    organizer?: string | null;
+    partner?: string | null;
+    enrollmentNotice?: string | null;
+    roleOptions?: string | null;
+    schoolOptions?: string | null;
+    trackOptions?: string | null;
+    requirePhone?: boolean;
   };
 }
 
@@ -45,12 +62,33 @@ export function CourseForm({ initialData }: CourseFormProps) {
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [syllabus, setSyllabus] = useState(initialData?.syllabus || "");
 
+  // Novos campos institucionais e do formulário de inscrição
+  const [organizer, setOrganizer] = useState(initialData?.organizer || "");
+  const [partner, setPartner] = useState(initialData?.partner || "");
+  const [enrollmentNotice, setEnrollmentNotice] = useState(initialData?.enrollmentNotice || "");
+  const [roleOptions, setRoleOptions] = useState(initialData?.roleOptions || "");
+  const [schoolOptions, setSchoolOptions] = useState(initialData?.schoolOptions || "");
+  const [trackOptions, setTrackOptions] = useState(initialData?.trackOptions || "");
+  const [requirePhone, setRequirePhone] = useState(
+    initialData?.requirePhone !== undefined ? initialData.requirePhone : true
+  );
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
     if (!isSlugManuallyEdited && !isEditing) {
       setSlug(slugify(newTitle));
     }
+  };
+
+  const handleLoadProAlfaDefaults = () => {
+    setOrganizer("Secretaria Municipal de Educação de Baraúna/RN");
+    setPartner("Secretaria de Estado da Educação, do Esporte e do Lazer do Rio Grande do Norte – SEEC/RN");
+    setEnrollmentNotice(DEFAULT_PRO_ALFA_NOTICE);
+    setRoleOptions(DEFAULT_PRO_ALFA_ROLES.join("\n"));
+    setSchoolOptions(BARAUNA_MUNICIPAL_SCHOOLS.join("\n"));
+    setTrackOptions(DEFAULT_PRO_ALFA_TRACKS.join("\n"));
+    setRequirePhone(true);
   };
 
   const actionFn = async (prevState: any, formData: FormData) => {
@@ -183,6 +221,200 @@ export function CourseForm({ initialData }: CourseFormProps) {
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-slate-900"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Seção 2: Personalização do Formulário de Inscrição & Dados Institucionais */}
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold text-slate-900 text-lg">Personalização do Formulário de Inscrição</h2>
+                <span className="text-[11px] font-bold text-brand-700 bg-brand-50 border border-brand-100 px-2 py-0.5 rounded">
+                  Página Pública
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Configure os órgãos promotores, opções de cargos, escolas da rede e texto oficial de apresentação
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLoadProAlfaDefaults}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-2 rounded-xl transition shadow-xs self-start sm:self-auto cursor-pointer"
+            title="Preenche automaticamente com os dados oficiais do Pró-Alfa RN (SME Baraúna e SEEC/RN)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            <span>⚡ Carregar Padrão Pró-Alfa RN</span>
+          </button>
+        </div>
+
+        {/* Órgão Realizador e Parceria */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="organizer" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-slate-400" />
+              Órgão Realizador
+            </label>
+            <input
+              type="text"
+              id="organizer"
+              name="organizer"
+              value={organizer}
+              onChange={(e) => setOrganizer(e.target.value)}
+              placeholder="Ex: Secretaria Municipal de Educação de Baraúna/RN"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-slate-900"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Exibido no cabeçalho da página de inscrição e relatórios</p>
+          </div>
+
+          <div>
+            <label htmlFor="partner" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
+              Parceiro / Programa
+            </label>
+            <input
+              type="text"
+              id="partner"
+              name="partner"
+              value={partner}
+              onChange={(e) => setPartner(e.target.value)}
+              placeholder="Ex: SEEC/RN – Pró-Alfa RN"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-slate-900"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Programa estadual ou parceiro institucional</p>
+          </div>
+        </div>
+
+        {/* Texto de Apresentação e Termo Oficial */}
+        <div>
+          <label htmlFor="enrollmentNotice" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <span>Apresentação Oficial da Inscrição / Regras da Formação</span>
+            <span className="text-[11px] font-normal text-slate-400">Texto explicativo exibido no topo do formulário</span>
+          </label>
+          <textarea
+            id="enrollmentNotice"
+            name="enrollmentNotice"
+            rows={4}
+            value={enrollmentNotice}
+            onChange={(e) => setEnrollmentNotice(e.target.value)}
+            placeholder="Ex: A Secretaria Municipal de Educação de Baraúna/RN em parceria com a SEEC/RN realiza a presente inscrição..."
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-slate-900 leading-relaxed"
+          />
+        </div>
+
+        {/* Configuração de Campos Selecionáveis */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          {/* Opções de Cargo/Função */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="roleOptions" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Opções de Cargo / Função (1 por linha)
+              </label>
+              <button
+                type="button"
+                onClick={() => setRoleOptions(DEFAULT_PRO_ALFA_ROLES.join("\n"))}
+                className="text-[11px] text-brand-600 font-bold hover:underline cursor-pointer"
+              >
+                Padrão MEC
+              </button>
+            </div>
+            <textarea
+              id="roleOptions"
+              name="roleOptions"
+              rows={4}
+              value={roleOptions}
+              onChange={(e) => setRoleOptions(e.target.value)}
+              placeholder="Professor(a)&#10;Profissional de Apoio&#10;Professor do AEE&#10;Profissional da Biblioteca"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs font-mono text-slate-900 leading-relaxed"
+            />
+            <p className="text-[11px] text-slate-400">
+              O cursista selecionará um destes cargos. A opção &quot;Outro&quot; é oferecida automaticamente.
+            </p>
+          </div>
+
+          {/* Trilhas Formativas */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="trackOptions" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Trilhas Formativas (1 por linha - Opcional)
+              </label>
+              <button
+                type="button"
+                onClick={() => setTrackOptions(DEFAULT_PRO_ALFA_TRACKS.join("\n"))}
+                className="text-[11px] text-brand-600 font-bold hover:underline cursor-pointer"
+              >
+                Padrão 1º/2º e 3º/5º
+              </button>
+            </div>
+            <textarea
+              id="trackOptions"
+              name="trackOptions"
+              rows={4}
+              value={trackOptions}
+              onChange={(e) => setTrackOptions(e.target.value)}
+              placeholder="Professores de 1º e 2º&#10;Professores de 3º e 5º"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs font-mono text-slate-900 leading-relaxed"
+            />
+            <p className="text-[11px] text-slate-400">
+              Se preenchido, o cursista escolhe sua trilha. Se você cadastrar cursos separados para cada ano, deixe vazio.
+            </p>
+          </div>
+        </div>
+
+        {/* Escolas da Rede */}
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center justify-between">
+            <label htmlFor="schoolOptions" className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <School className="w-3.5 h-3.5 text-slate-400" />
+              Lista de Escolas da Rede (1 por linha)
+            </label>
+            <button
+              type="button"
+              onClick={() => setSchoolOptions(BARAUNA_MUNICIPAL_SCHOOLS.join("\n"))}
+              className="text-[11px] text-brand-600 font-bold hover:underline cursor-pointer"
+            >
+              Carregar todas as escolas de Baraúna/RN
+            </button>
+          </div>
+          <textarea
+            id="schoolOptions"
+            name="schoolOptions"
+            rows={5}
+            value={schoolOptions}
+            onChange={(e) => setSchoolOptions(e.target.value)}
+            placeholder="Cole ou edite a lista de escolas municipais aqui..."
+            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs font-mono text-slate-900 leading-relaxed"
+          />
+          <p className="text-[11px] text-slate-400">
+            Gera um seletor inteligente com busca para o professor. A opção &quot;Outra escola não listada&quot; é permitida por padrão.
+          </p>
+        </div>
+
+        {/* Toggles Adicionais */}
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="requirePhone"
+              name="requirePhone"
+              value="true"
+              checked={requirePhone}
+              onChange={(e) => setRequirePhone(e.target.checked)}
+              className="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300"
+            />
+            <label htmlFor="requirePhone" className="text-xs font-bold text-slate-800 cursor-pointer flex items-center gap-1.5">
+              <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
+              Exigir número de WhatsApp / Telefone obrigatoriamente
+            </label>
+          </div>
+          <span className="text-[11px] text-slate-400">Recomendado para contato e chamadas da turma</span>
         </div>
       </div>
 

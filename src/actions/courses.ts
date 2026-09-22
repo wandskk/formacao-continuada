@@ -26,6 +26,16 @@ const courseSchema = z.object({
   status: z.nativeEnum(CourseStatus).default(CourseStatus.OPEN),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  organizer: z.string().optional(),
+  partner: z.string().optional(),
+  enrollmentNotice: z.string().optional(),
+  roleOptions: z.string().optional(),
+  schoolOptions: z.string().optional(),
+  trackOptions: z.string().optional(),
+  requirePhone: z.preprocess(
+    (val) => val === "true" || val === "on" || val === true || val === "1",
+    z.boolean()
+  ).default(true),
 });
 
 export type ActionResponse<T = any> = {
@@ -57,6 +67,13 @@ export async function createCourseAction(
     status: (formData.get("status") as CourseStatus) || CourseStatus.OPEN,
     startDate: formData.get("startDate") as string,
     endDate: formData.get("endDate") as string,
+    organizer: formData.get("organizer") as string,
+    partner: formData.get("partner") as string,
+    enrollmentNotice: formData.get("enrollmentNotice") as string,
+    roleOptions: formData.get("roleOptions") as string,
+    schoolOptions: formData.get("schoolOptions") as string,
+    trackOptions: formData.get("trackOptions") as string,
+    requirePhone: formData.get("requirePhone") !== null ? formData.get("requirePhone") : "true",
   };
 
   const validation = courseSchema.safeParse(rawData);
@@ -64,8 +81,25 @@ export async function createCourseAction(
     return { error: validation.error.issues[0]?.message || "Dados inválidos." };
   }
 
-  const { title, slug: customSlug, description, targetAudience, syllabus, totalHours, minFrequency, status, startDate, endDate } =
-    validation.data;
+  const {
+    title,
+    slug: customSlug,
+    description,
+    targetAudience,
+    syllabus,
+    totalHours,
+    minFrequency,
+    status,
+    startDate,
+    endDate,
+    organizer,
+    partner,
+    enrollmentNotice,
+    roleOptions,
+    schoolOptions,
+    trackOptions,
+    requirePhone,
+  } = validation.data;
 
   try {
     let finalSlug: string;
@@ -87,6 +121,13 @@ export async function createCourseAction(
         status,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
+        organizer: organizer || null,
+        partner: partner || null,
+        enrollmentNotice: enrollmentNotice || null,
+        roleOptions: roleOptions || null,
+        schoolOptions: schoolOptions || null,
+        trackOptions: trackOptions || null,
+        requirePhone,
       },
     });
 
@@ -123,6 +164,13 @@ export async function updateCourseAction(
     status: (formData.get("status") as CourseStatus) || CourseStatus.OPEN,
     startDate: formData.get("startDate") as string,
     endDate: formData.get("endDate") as string,
+    organizer: formData.get("organizer") as string,
+    partner: formData.get("partner") as string,
+    enrollmentNotice: formData.get("enrollmentNotice") as string,
+    roleOptions: formData.get("roleOptions") as string,
+    schoolOptions: formData.get("schoolOptions") as string,
+    trackOptions: formData.get("trackOptions") as string,
+    requirePhone: formData.get("requirePhone") !== null ? formData.get("requirePhone") : "false",
   };
 
   const validation = courseSchema.safeParse(rawData);
@@ -130,8 +178,25 @@ export async function updateCourseAction(
     return { error: validation.error.issues[0]?.message || "Dados inválidos." };
   }
 
-  const { title, slug: customSlug, description, targetAudience, syllabus, totalHours, minFrequency, status, startDate, endDate } =
-    validation.data;
+  const {
+    title,
+    slug: customSlug,
+    description,
+    targetAudience,
+    syllabus,
+    totalHours,
+    minFrequency,
+    status,
+    startDate,
+    endDate,
+    organizer,
+    partner,
+    enrollmentNotice,
+    roleOptions,
+    schoolOptions,
+    trackOptions,
+    requirePhone,
+  } = validation.data;
 
   try {
     let finalSlug: string | undefined = undefined;
@@ -152,6 +217,13 @@ export async function updateCourseAction(
         status,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
+        organizer: organizer || null,
+        partner: partner || null,
+        enrollmentNotice: enrollmentNotice || null,
+        roleOptions: roleOptions || null,
+        schoolOptions: schoolOptions || null,
+        trackOptions: trackOptions || null,
+        requirePhone,
       },
     });
 
@@ -235,6 +307,7 @@ const publicEnrollSchema = z.object({
   birthDate: z.string().min(8, "Data de nascimento é obrigatória"),
   school: z.string().optional(),
   function: z.string().optional(),
+  track: z.string().optional(),
   email: z.string().email("E-mail inválido").optional().or(z.literal("")),
   phone: z.string().optional(),
 });
@@ -259,14 +332,20 @@ export async function publicEnrollAction(
     return { error: "As inscrições para esta formação não estão abertas no momento." };
   }
 
+  const rawPhone = (formData.get("phone") as string) || "";
+  if (course.requirePhone && sanitizeNumeric(rawPhone).length < 10) {
+    return { error: "O número de telefone / WhatsApp com DDD é obrigatório para esta formação." };
+  }
+
   const rawData = {
     name: formData.get("name") as string,
     cpf: formData.get("cpf") as string,
     birthDate: formData.get("birthDate") as string,
     school: formData.get("school") as string,
     function: formData.get("function") as string,
+    track: formData.get("track") as string,
     email: formData.get("email") as string,
-    phone: formData.get("phone") as string,
+    phone: rawPhone,
   };
 
   const validation = publicEnrollSchema.safeParse(rawData);
@@ -274,7 +353,7 @@ export async function publicEnrollAction(
     return { error: validation.error.issues[0]?.message || "Dados inválidos." };
   }
 
-  const { name, cpf, birthDate: birthStr, school, function: userFunction, email, phone } = validation.data;
+  const { name, cpf, birthDate: birthStr, school, function: userFunction, track, email, phone } = validation.data;
   const parsedBirth = new Date(birthStr);
 
   try {
@@ -301,13 +380,13 @@ export async function publicEnrollAction(
         },
       });
     } else {
-      // Se usuário já existe, atualiza dados cadastrais se estiverem vazios
+      // Se usuário já existe, atualiza dados cadastrais
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          school: user.school || school || null,
-          function: user.function || userFunction || null,
-          phone: user.phone || phone || null,
+          school: school || user.school || null,
+          function: userFunction || user.function || null,
+          phone: phone || user.phone || null,
           ...(user.email ? {} : email ? { email: email.toLowerCase() } : {}),
         },
       });
@@ -329,11 +408,14 @@ export async function publicEnrollAction(
       };
     }
 
-    // Efetiva a matrícula
+    // Efetiva a matrícula vinculando dados do snapshot da inscrição
     await prisma.enrollment.create({
       data: {
         userId: user.id,
         courseId: course.id,
+        school: school || null,
+        function: userFunction || null,
+        track: track || null,
       },
     });
 
@@ -359,7 +441,10 @@ export async function publicEnrollAction(
 /**
  * Inscrição com 1 clique para usuário já autenticado
  */
-export async function authenticatedEnrollAction(courseId: string): Promise<ActionResponse> {
+export async function authenticatedEnrollAction(
+  courseId: string,
+  metadata?: { school?: string; function?: string; track?: string }
+): Promise<ActionResponse> {
   const currentUser = await getCurrentUser();
   if (!currentUser) {
     return { error: "Você precisa estar logado para se inscrever." };
@@ -391,6 +476,9 @@ export async function authenticatedEnrollAction(courseId: string): Promise<Actio
       data: {
         userId: currentUser.id,
         courseId,
+        school: metadata?.school || currentUser.school || null,
+        function: metadata?.function || currentUser.function || null,
+        track: metadata?.track || null,
       },
     });
 

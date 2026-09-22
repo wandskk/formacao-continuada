@@ -8,6 +8,7 @@ export interface CursistaFrequencyRecord {
   cpf: string;
   school?: string | null;
   function?: string | null;
+  track?: string | null;
   email?: string | null;
   phone?: string | null;
   enrolledAt: Date;
@@ -148,8 +149,9 @@ export async function calculateCourseFrequencyData(courseId: string): Promise<Co
       userId: enr.user.id,
       name: enr.user.name,
       cpf: enr.user.cpf,
-      school: enr.user.school,
-      function: enr.user.function,
+      school: enr.school || enr.user.school,
+      function: enr.function || enr.user.function,
+      track: enr.track,
       email: enr.user.email,
       phone: enr.user.phone,
       enrolledAt: enr.enrolledAt,

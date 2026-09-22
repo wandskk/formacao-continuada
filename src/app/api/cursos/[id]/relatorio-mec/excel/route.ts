@@ -25,6 +25,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       "CPF": formatCPF(c.cpf),
       "Escola de Lotação": c.school || "Não informada",
       "Cargo / Função": c.function || "Professor",
+      "Trilha / Segmento": c.track || "Padrão / Geral",
       "Horas Cumpridas": c.completedHours,
       "Carga Horária do Curso": course.totalHours,
       "Frequência (%)": `${c.frequencyPercentage}%`,
@@ -46,6 +47,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       { wch: 18 }, // CPF
       { wch: 28 }, // Escola
       { wch: 22 }, // Cargo
+      { wch: 24 }, // Trilha
       { wch: 16 }, // Horas Cumpridas
       { wch: 22 }, // Carga Horária
       { wch: 16 }, // Frequência %

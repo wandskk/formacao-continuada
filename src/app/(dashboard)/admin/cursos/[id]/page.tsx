@@ -90,6 +90,11 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
                 <span className="text-xs text-slate-400 font-mono">/inscricao/{course.slug}</span>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mt-1">{course.title}</h1>
+              {(course.organizer || course.partner) && (
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {course.organizer} {course.partner && `• ${course.partner}`}
+                </p>
+              )}
             </div>
           </div>
 

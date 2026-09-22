@@ -13,7 +13,8 @@ import {
   ArrowLeft,
   FileText,
   Calendar,
-  ShieldCheck
+  ShieldCheck,
+  Building2
 } from "lucide-react";
 import { PublicEnrollmentForm } from "@/components/courses/public-enrollment-form";
 import { CourseStatus } from "@prisma/client";
@@ -67,7 +68,7 @@ export default async function PublicInscricaoPage({ params }: PublicInscricaoPag
                 Formação Continuada
               </span>
               <span className="text-xs text-slate-500 hidden sm:block">
-                Selo Alfabetização MEC • Rede Municipal de Ensino
+                {course.organizer || "Selo Alfabetização MEC • Rede Municipal de Ensino"}
               </span>
             </div>
           </div>
@@ -111,7 +112,22 @@ export default async function PublicInscricaoPage({ params }: PublicInscricaoPag
                 <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
                   Formação Presencial
                 </span>
+                {course.partner && (
+                  <span className="text-xs font-semibold text-brand-700 bg-blue-50 border border-brand-100 px-2.5 py-1 rounded-full">
+                    {course.partner}
+                  </span>
+                )}
               </div>
+
+              {(course.organizer || course.partner) && (
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-amber-50/80 border border-amber-200/60 px-3.5 py-2 rounded-xl">
+                  <Building2 className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                  <span>
+                    {course.organizer || "Secretaria Municipal de Educação"}
+                    {course.partner && ` em parceria com ${course.partner}`}
+                  </span>
+                </div>
+              )}
 
               <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
                 {course.title}
@@ -123,6 +139,19 @@ export default async function PublicInscricaoPage({ params }: PublicInscricaoPag
                 </p>
               )}
             </div>
+
+            {/* Texto de Apresentação Oficial / Termos da Inscrição */}
+            {course.enrollmentNotice && (
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-brand-700 uppercase tracking-wider">
+                  <FileText className="w-4 h-4 text-brand-600" />
+                  <span>Instruções e Regras da Formação</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                  {course.enrollmentNotice}
+                </p>
+              </div>
+            )}
 
             {/* Grid de Informações Chave */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -206,6 +235,7 @@ export default async function PublicInscricaoPage({ params }: PublicInscricaoPag
                 courseId={course.id}
                 currentUser={currentUser}
                 isAlreadyEnrolled={isAlreadyEnrolled}
+                courseConfig={course}
               />
             ) : (
               <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-4 shadow-sm">
