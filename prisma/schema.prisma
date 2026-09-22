@@ -123,6 +123,7 @@ model Session {
   date            DateTime     // Data do encontro
   hours           Int          // Carga horária do encontro (ex: 4h)
   qrToken         String       @unique @default(uuid()) // Token dinâmico rotativo
+  previousQrToken String?      // Token imediatamente anterior para tolerância de rotação
   qrExpiresAt     DateTime?    // Expiração do token (a cada 20-30s)
   isActive        Boolean      @default(true)
   createdAt       DateTime     @default(now())

@@ -4,6 +4,9 @@ import { DirectCheckinClient } from "@/components/attendance/direct-checkin-clie
 import { School, AlertCircle } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface CheckinPageProps {
   searchParams: Promise<{
     s?: string;

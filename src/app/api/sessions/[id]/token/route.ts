@@ -55,6 +55,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       await prisma.session.update({
         where: { id: session.id },
         data: {
+          previousQrToken: session.qrToken,
           qrToken: currentToken,
           qrExpiresAt: nextExpiresAt,
         },
@@ -65,18 +66,25 @@ export async function GET(request: Request, { params }: RouteParams) {
       ? Math.max(1, Math.round((new Date(nextExpiresAt).getTime() - now) / 1000))
       : 300;
 
-    return NextResponse.json({
-      isActive: true,
-      qrToken: currentToken,
-      expiresAt: nextExpiresAt,
-      remainingSeconds,
-      attendeesCount: session._count.attendances,
-      recentAttendees: session.attendances.map((a) => ({
-        name: a.user.name.split(" ")[0] + " " + (a.user.name.split(" ")[1] || ""),
-        school: a.user.school,
-        time: a.checkInAt,
-      })),
-    });
+    return NextResponse.json(
+      {
+        isActive: true,
+        qrToken: currentToken,
+        expiresAt: nextExpiresAt,
+        remainingSeconds,
+        attendeesCount: session._count.attendances,
+        recentAttendees: session.attendances.map((a) => ({
+          name: a.user.name.split(" ")[0] + " " + (a.user.name.split(" ")[1] || ""),
+          school: a.user.school,
+          time: a.checkInAt,
+        })),
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error) {
     console.error("Erro na rota de token dinâmico:", error);
     return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 });

@@ -73,7 +73,12 @@ export function QrProjector({
       .catch((err) => console.error("Erro ao gerar QR Code:", err));
   }, [token, sessionId]);
 
-  // Loop de contagem regressiva de 5 minutos (300 segundos)
+  // Sincroniza imediatamente ao abrir a tela para garantir token fresco e estatísticas em tempo real
+  useEffect(() => {
+    fetchNewToken();
+  }, [sessionId]);
+
+  // Loop de contagem regressiva por segundo
   useEffect(() => {
     if (!isActive) return;
 
@@ -90,10 +95,24 @@ export function QrProjector({
     return () => clearInterval(timer);
   }, [sessionId, isActive]);
 
+  // Polling a cada 10s para atualizar lista de presentes ao vivo e sincronizar relógio com o servidor
+  useEffect(() => {
+    if (!isActive) return;
+
+    const pollTimer = setInterval(() => {
+      fetchNewToken();
+    }, 10000);
+
+    return () => clearInterval(pollTimer);
+  }, [sessionId, isActive]);
+
   // Busca novo token rotativo e estatísticas da sessão
   const fetchNewToken = async () => {
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/token`, { cache: "no-store" });
+      const res = await fetch(`/api/sessions/${sessionId}/token?_t=${Date.now()}`, { 
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.qrToken) {
@@ -106,8 +125,6 @@ export function QrProjector({
         }
         if (typeof data.remainingSeconds === "number") {
           setTimeLeft(data.remainingSeconds);
-        } else {
-          setTimeLeft(ROTATION_SECONDS);
         }
       }
     } catch (err) {

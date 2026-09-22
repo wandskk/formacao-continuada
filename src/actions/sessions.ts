@@ -56,6 +56,7 @@ export async function createSessionAction(
         hours,
         instructorId: instructorId || currentUser.id,
         qrToken: crypto.randomUUID(),
+        previousQrToken: null,
         qrExpiresAt: new Date(Date.now() + 300000), // 5 minutos inicial
         isActive: true,
       },
@@ -109,7 +110,7 @@ export async function rotateSessionQrTokenAction(sessionId: string): Promise<Act
   try {
     const session = await prisma.session.findUnique({
       where: { id: sessionId },
-      select: { id: true, isActive: true },
+      select: { id: true, isActive: true, qrToken: true },
     });
 
     if (!session || !session.isActive) {
@@ -122,6 +123,7 @@ export async function rotateSessionQrTokenAction(sessionId: string): Promise<Act
     await prisma.session.update({
       where: { id: sessionId },
       data: {
+        previousQrToken: session.qrToken,
         qrToken: newToken,
         qrExpiresAt: expiresAt,
       },
@@ -172,11 +174,20 @@ export async function checkInAction({
       return { error: "Esta chamada foi encerrada pelo formador." };
     }
 
-    // Validação do Token dinâmico com tolerância de 60 segundos para latência 3G/4G e conclusão de login
+    // Validação robusta do Token dinâmico
     const now = Date.now();
     const expiryTime = session.qrExpiresAt ? new Date(session.qrExpiresAt).getTime() : 0;
-    const isTokenMatch = session.qrToken === qrToken;
-    const isWithinGraceWindow = now <= expiryTime + 60000;
+    
+    // O token informado corresponde ao token ativo atual ou ao token anterior da rotação?
+    const isCurrentToken = session.qrToken === qrToken;
+    const isPreviousToken = !!session.previousQrToken && session.previousQrToken === qrToken;
+    const isTokenMatch = isCurrentToken || isPreviousToken;
+
+    // Se é o token atual de uma sessão ATIVA, é sempre válido (o projetor está projetando ou o formador abriu a chamada).
+    // Se for o token anterior (logo após uma rotação), concedemos 15 minutos de tolerância para quem já havia escaneado e estava logando.
+    const isWithinGraceWindow = isCurrentToken 
+      ? true 
+      : (now <= expiryTime + 900000); // 15 minutos de tolerância para o token rotacionado
 
     if (!isTokenMatch || !isWithinGraceWindow) {
       return {
